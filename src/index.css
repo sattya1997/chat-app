@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.scrollbar::-webkit-scrollbar {
+  width: 0px;
+}
+
+.sidebar {
+  left: 45px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.hide-sidebar {
+  transform: translateX(-150%);
+}
+
+.show-sidebar {
+  transform: translateX(0%);
+}
