@@ -7,6 +7,7 @@ import {
   Delete,
   EllipsisVertical,
   Image,
+  PhoneIcon,
   Plus,
   Send,
   Video,
@@ -14,7 +15,7 @@ import {
 import moment from "moment";
 import uploadFile from "../utils/uploadFile";
 
-const UserDetails = ({ chatUser }) => {
+const UserDetails = ({ chatUser, triggerAudioCalling, triggerVideoCalling }) => {
   const socket = GetSocket();
   const [userData, setUserData] = useState({
     name: "",
@@ -93,11 +94,8 @@ const UserDetails = ({ chatUser }) => {
   };
 
   return (
-    <div
-      style={{ backgroundImage: `url(${backgroundImage})`, width: "100%", height: "100%" }}
-      className="bg-no-repeat bg-cover"
-    >
-      <header className="top-0 h-16 bg-secondary flex justify-between items-center px-4">
+    <div className="h-svh w-svw flex flex-col">
+      <header className="top-0 h-16 bg-slate-800 flex justify-between items-center px-4">
         <div className="flex items-center gap-4">
           <Avatar
             imageUrl={userData?.profilePic}
@@ -117,11 +115,13 @@ const UserDetails = ({ chatUser }) => {
             </p>
           </div>
         </div>
+        <PhoneIcon className="cursor-pointer text-green-400 hover:text-green-600" onClick={ () => triggerAudioCalling()}/>
+        <Video className="cursor-pointer text-purple-400 hover:text-purple-600" onClick={ () => triggerVideoCalling()}/>
         <EllipsisVertical size={20} className="cursor-pointer text-slate-200" />
       </header>
 
       {/* all messages  */}
-      <section className="h-[calc(100vh-128px)] overflow-x-hidden overflow-y-scroll scrollbar bg-primary bg-opacity-95">
+      <section className="overflow-x-hidden overflow-y-scroll scrollbar bg-primary bg-opacity-95 h-svh">
         <div className="flex flex-col gap-2 py-2 mx-2">
           {allMessages?.length
             ? allMessages?.map((msg, index) => (
@@ -230,7 +230,7 @@ const UserDetails = ({ chatUser }) => {
         )}
       </section>
 
-      <section className="h-16 bg-secondary flex items-center px-4">
+      <section className="h-16 bg-slate-800 flex items-center px-4">
         <div className="relative">
           <button
             className="flex justify-center items-center w-11 h-11 rounded-full text-gray-300"

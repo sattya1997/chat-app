@@ -14,12 +14,12 @@ const AddUser = ({ setOpenSearchUser }) => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [searchUser, setSearchUser] = useState([]);
-
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
   const handleUser = async () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/searchUser`,
+        `${REACT_APP_BACKEND_URL}/api/searchUser`,
         {
           search,
         },

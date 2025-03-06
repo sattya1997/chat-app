@@ -12,9 +12,11 @@ const SocketProvider = ({ children }) => {
     defaultValue: {},
   });
 
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
+
   const socket = useMemo(() => {
     if (user?.token) {
-      return io("http://localhost:5000", { auth: { token: user?.token } });
+      return io(REACT_APP_BACKEND_URL, { auth: { token: user?.token } });
     }
   }, [user?.token]);
   return (

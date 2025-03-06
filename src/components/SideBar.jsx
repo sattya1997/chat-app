@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { GetSocket } from "../utils/SocketProvider";
-import { LogOut, MessageCircle, UserPlus } from "lucide-react";
+import { LogOut, MessageCircle, PhoneCall } from "lucide-react";
 import Avatar from "./Avatar";
 import { useLocalStorage } from "@mantine/hooks";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,14 @@ import SearchUser from "./SearchUser";
 import EditProfile from "./EditProfile";
 import axios from "axios";
 
-const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, toggleSideBar }) => {
+const SideBar = ({
+  triggerChatUser,
+  chatUser,
+  hideSideBar,
+  toggleCalling,
+  toggleSideBar,
+  callingBar,
+}) => {
   const navigate = useNavigate();
   const [user, setUser] = useLocalStorage({
     key: "userData",
@@ -18,12 +25,13 @@ const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, tog
   const [editProfile, setEditProfile] = useState(false);
   const [allConversation, setAllConversation] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const REACT_APP_BACKEND_URL = "https://chat-app-server-euua.onrender.com";
 
   useEffect(() => {
     const fetchData = async () => {
       const getAllUsers = async () => {
         const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/getAllUsers`,
+          `${REACT_APP_BACKEND_URL}/api/getAllUsers`,
           {
             headers: {
               Authorization: `Bearer ${user?.token}`,
@@ -38,19 +46,16 @@ const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, tog
         const params = {
           user: user._id,
         };
-        const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/getAllConv`,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.token}`,
-              Accept: "application/json",
-            },
-            params: params,
-          }
-        );
+        const res = await axios.get(`${REACT_APP_BACKEND_URL}/api/getAllConv`, {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+            Accept: "application/json",
+          },
+          params: params,
+        });
         var convs = res?.data;
         let data = [];
-        convs.forEach(conv => {
+        convs.forEach((conv) => {
           let temp = conv.receiver;
           if (temp._id === user._id) {
             temp = conv.sender;
@@ -58,7 +63,7 @@ const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, tog
           temp.seen = conv.unseenMsg;
           data.push(temp);
         });
-        setAllConversation(data)
+        setAllConversation(data);
       };
 
       if (user && user._id) {
@@ -76,7 +81,7 @@ const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, tog
 
       socket.on("conversation", (convs) => {
         let data = [];
-        convs.forEach(conv => {
+        convs.forEach((conv) => {
           let temp = conv.receiver;
           if (temp._id === user._id) {
             temp = conv.sender;
@@ -84,7 +89,7 @@ const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, tog
           temp.seen = conv.unseenMsg;
           data.push(temp);
         });
-        setAllConversation(data)
+        setAllConversation(data);
       });
     }
 
@@ -106,18 +111,25 @@ const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, tog
 
   return (
     <div className="h-svh flex flex-row bg-slate-700">
-      <div className="bg-secondary h-full py-5 flex flex-col items-center justify-between" style={{position: "relative"}}>
+      <div
+        className="bg-secondary h-full py-5 flex flex-col items-center justify-between"
+        style={{ position: "relative" }}
+      >
         <div>
-          <div className="w-12 h-12 flex justify-center items-center cursor-pointer text-slate-300 hover:text-slate-200 rounded" onClick={toggleSideBar}>
+          <div
+            title="Chat Menu"
+            className="w-12 h-12 flex justify-center items-center cursor-pointer text-slate-300 hover:text-slate-200 rounded"
+            onClick={toggleSideBar}
+          >
             <MessageCircle size={20} />
           </div>
 
           <div
-            title="Add friend"
-            onClick={() => toggleSearchUser()}
+            title="Calling Menu"
+            onClick={() => toggleCalling()}
             className="w-12 h-12 flex justify-center items-center cursor-pointer text-slate-300 hover:text-slate-200 rounded"
           >
-            <UserPlus size={20} />
+            <PhoneCall size={20} />
           </div>
         </div>
         <div className="flex flex-col items-center">
@@ -135,30 +147,45 @@ const SideBar = ({ triggerChatUser, chatUser, hideSideBar, toggleSearchUser, tog
           </button>
         </div>
       </div>
-      <div className={`w-64 h-full bg-slate-600 sidebar ${hideSideBar? 'hide-sidebar' : 'show-sidebar'}`}>
+      <div
+        className={`h-full bg-slate-600 ${
+          hideSideBar ? "w-0 hide-sidebar" : "w-64 sidebar show-sidebar"
+        }`}
+      >
         <SearchUser allUsers={allUsers.users} setChatUser={setChatUser} />
-        {allConversation && allConversation.map((item, index) => (
-          <div
-          key={index}
-          className="flex items-center gap-3 p-4 border-b border-slate-200 h-20 hover:bg-slate-800"
-          style={{backgroundColor: chatUser?._id === item._id ? "#364044": ""}}
-          onClick={() => setChatUser(item)}
-        >
-          <Avatar
-            name={item.name}
-            userId={item._id}
-            imageUrl={item.profilePic}
-            className="w-16 h-16"
-          />
-          <div className="flex-1 text-ellipsis overflow-hidden">
-            <p className="font-semibold text-lg text-gray-300">{item?.name}</p>
-            <p className="text-sm text-gray-500">{item.email}</p>
-          </div>
-          {item.seen > 0 && <div className="text-gray-400 text-xs">{item.seen}</div>}
-        </div>
-        ))}
+        {allConversation &&
+          allConversation.map((item, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-4 border-b border-slate-200 h-20 hover:bg-slate-800"
+              style={{
+                backgroundColor: chatUser?._id === item._id ? "#364044" : "",
+              }}
+              onClick={() => setChatUser(item)}
+            >
+              <Avatar
+                name={item.name}
+                userId={item._id}
+                imageUrl={item.profilePic}
+                className="w-16 h-16"
+              />
+              <div className="flex-1 text-ellipsis overflow-hidden">
+                <p className="font-semibold text-lg text-gray-300">
+                  {item?.name}
+                </p>
+                <p className="text-sm text-gray-500">{item.email}</p>
+              </div>
+              {item.seen > 0 && (
+                <div className="text-gray-400 text-xs">{item.seen}</div>
+              )}
+            </div>
+          ))}
       </div>
-
+      {callingBar && (
+        <div className={`h-full w-64 bg-slate-600`}>
+          <p>working</p>
+        </div>
+      )}
       {/* {openSearchUser && <AddUser setOpenSearchUser={setOpenSearchUser} />} */}
       {editProfile && (
         <EditProfile

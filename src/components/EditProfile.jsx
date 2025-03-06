@@ -12,6 +12,7 @@ const EditProfile = ({ setEditProfile, user, setUser }) => {
     profilePic: user?.profilePic,
   });
   const uploadRef = useRef();
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
   useEffect(() => {
     setEditProfile({
       name: user?.name,
@@ -26,7 +27,7 @@ const EditProfile = ({ setEditProfile, user, setUser }) => {
     try {
       const res = await axios({
         method: "put",
-        url: `${process.env.REACT_APP_BACKEND_URL}/api/updateUser`,
+        url: `${REACT_APP_BACKEND_URL}/api/updateUser`,
         data: edituserData,
       });
 

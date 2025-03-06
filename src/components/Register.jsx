@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import uploadFile from "../utils/uploadFile";
 import axios from "axios";
 import { toast } from "sonner";
+
 const Register = () => {
   const navigate = useNavigate();
   const [RegisterData, setRegisterData] = useState({
@@ -16,6 +17,7 @@ const Register = () => {
     profilePic: "",
   });
   const [uploadImg, setUploadImg] = useState("");
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -54,7 +56,7 @@ const Register = () => {
 
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/register`,
+        `${REACT_APP_BACKEND_URL}/api/register`,
         RegisterData
       );
       if (res.data.success) {

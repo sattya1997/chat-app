@@ -18,6 +18,8 @@ const Login = () => {
     password: "",
   });
 
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
+
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -35,7 +37,7 @@ const Login = () => {
 
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/login`,
+        `${REACT_APP_BACKEND_URL}/api/login`,
         loginData
       );
       if (res.data.success) {

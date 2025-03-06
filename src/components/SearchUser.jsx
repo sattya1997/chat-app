@@ -14,12 +14,13 @@ const SearchUser = ({ allUsers, setChatUser }) => {
   const [search, setSearch] = useState("");
   const [searchUser, setSearchUser] = useState([]);
   const [searchList, setSearchList] = useState([]);
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
 
   const handleUser = async () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/searchUser`,
+        `${REACT_APP_BACKEND_URL}/api/searchUser`,
         {
           search,
         },
@@ -54,24 +55,24 @@ const SearchUser = ({ allUsers, setChatUser }) => {
   }
 
   return (
-    <div className="relative top-0 bottom-0 left-0 right-0 bg-slate-700 bg-opacity-80 p-2 z-10 w-70">
-      <div className="w-70 max-w-md mx-auto">
-        <div className="w-70">
-          <div className="bg-gray-800 rounded h-10 overflow-hidden flex relative w-70">
+    <div className="relative top-0 bottom-0 left-0 right-0 bg-slate-700 bg-opacity-80 p-2 z-10 w-64">
+      <div className=" max-w-md mx-auto">
+        <div className="">
+          <div className="bg-gray-800 rounded h-10 overflow-hidden flex relative">
             <input
               type="text"
               placeholder="Search user"
-              className="w-full outline-none py-1 h-full px-4 bg-gray-800 text-white"
+              className="w-48 outline-none py-1 h-full px-4 bg-gray-800 text-white"
               onChange={(e) => setSearch(e.target.value)}
               onFocus={showAllUserList}
-              // onBlur={closeResultList}
+              onBlur={closeResultList}
             />
             <div className="h-full w-14 flex justify-center items-center">
               <Search size={20} />
             </div>
           </div>
 
-          <div className="absolute rounded mt-2 max-h-80 overflow-y-auto shadow-lg" style={{backgroundColor: "#2a424f", width: '305px'}}>
+          <div className="absolute rounded mt-2 max-h-80 overflow-y-auto shadow-lg" style={{backgroundColor: "#2a424f"}}>
             {searchList.length > 0 && (
               <div className="flex justify-end">
                 <div

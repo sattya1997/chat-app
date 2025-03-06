@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { SocketProvider } from "./utils/SocketProvider";
 import { useLocalStorage } from "@mantine/hooks";
@@ -16,20 +16,21 @@ function App() {
   return (
     <div className="App">
       <Toaster />
-      <Suspense fallback={<div>Loading</div>}>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            element={
-              <SocketProvider>
-                <ProtectedRoute user={user} />
-              </SocketProvider>
-            }
-          >
-            <Route path="/" element={<Home />} />
-          </Route>
-        </Routes>
+      <Suspense>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              element={
+                <SocketProvider>
+                  <ProtectedRoute user={user} />
+                </SocketProvider>
+              }
+            >
+              <Route path="/" element={<Home />} />
+            </Route>
+            <Route path="*" element={ <Home/>}/>
+          </Routes>
       </Suspense>
     </div>
   );

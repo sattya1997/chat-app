@@ -3,7 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { GetSocket } from "../utils/SocketProvider";
 import SideBar from "./SideBar";
 import UserDetails from "./UserDetails";
-import CallingScreen from "./CallingScreen";
+import Peer from "simple-peer";
+import Avatar from "./Avatar";
+
+import callImage from "../assets/12320300.gif";
 
 const Home = () => {
   const socket = GetSocket();
@@ -12,15 +15,25 @@ const Home = () => {
     defaultValue: [],
   });
 
+  const [user] = useLocalStorage({
+    key: "userData",
+    defaultValue: {},
+  });
   const [chatUser, setChatUser] = useState(null);
   const [hideSideBar, setHideSideBar] = useState(false);
   const [callingBar, setCallingBar] = useState(false);
 
+  const [callAccepted, setCallAccepted] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const [receivingCall, setReceivingCall] = useState(false);
+  const [callerSignal, setCallerSignal] = useState(null);
   const [videoCall, setVideoCall] = useState(false);
   const [toUser, setToUser] = useState(null);
-
-  const [callingScreen, setCallingScreen] = useState(false);
-  const [callerSignal, setCallerSignal] = useState(null);
+  const [fromUser, setFromUser] = useState(null);
+  const [stream, setStream] = useState(null);
+  const myVideo = useRef();
+  const userVideo = useRef();
+  const connection = useRef();
 
   useEffect(() => {
     if (socket) {
@@ -29,7 +42,16 @@ const Home = () => {
       });
 
       socket.on("callUser", (data) => {
-        setToUser(data.fromUser);
+        // navigator.mediaDevices
+        //   .getUserMedia({ video: true, audio: true })
+        //   .then((stream) => {
+        //     setStream(stream);
+        //     if (myVideo.current) {
+        //       myVideo.current.srcObject = stream;
+        //     }
+        //   });
+        setFromUser(data.fromUser);
+        setReceivingCall(true);
         setCallerSignal(data.signal);
       });
 
@@ -79,24 +101,130 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if ((toUser || callerSignal !== null) && chatUser == null) {
-      setCallingScreen(true);
+    if (toUser !== null) {
+      navigator.mediaDevices
+        .getUserMedia({ video: videoCall, audio: true })
+        .then((stream) => {
+          setStream(stream);
+          if (myVideo.current) {
+            myVideo.current.srcObject = stream;
+          }
+          callUser();
+        });
     }
-
-    if (toUser === null) {
-      setCallingScreen(false);
-    }
-  }, [toUser, chatUser, videoCall]);
+  }, [toUser, videoCall]);
 
   useEffect(() => {
-    if ((toUser || callerSignal)) {
-      setCallingScreen(true);
+    if (receivingCall) {
+      setChatUser(null);
     }
-  }, [callerSignal, toUser])
+  }, [receivingCall, fromUser, stream]);
+
+  const callUser = () => {
+    const peer = new Peer({
+      initiator: true,
+      trickle: false,
+      stream: stream,
+    });
+    peer.on("signal", (data) => {
+      socket.emit("callUser", {
+        toUser: toUser,
+        signalData: data,
+        fromUser: user,
+      });
+    });
+    peer.on("stream", (stream) => {
+      if (userVideo.current) {
+        userVideo.current.srcObject = stream;
+      }
+    });
+    socket.on("callAccepted", (signal) => {
+      setCallAccepted(true);
+      peer.signal(signal);
+    });
+
+    connection.current = peer;
+  };
+
+  useEffect(() => {
+    if (callAccepted && stream) {
+      const peer = new Peer({
+        initiator: false,
+        trickle: false,
+        stream: stream,
+      });
+      peer.on("signal", (data) => {
+        socket.emit("answerCall", { signal: data, toUser: fromUser });
+      });
+      peer.on("stream", (stream) => {
+        if (userVideo.current) {
+          userVideo.current.srcObject = stream;
+        }
+      });
+
+      peer.signal(callerSignal);
+      connection.current = peer;
+    }
+  }, [callAccepted, stream, callerSignal, fromUser, socket]);
+
+  const answerCall = () => {
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((myStream) => {
+        const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          stream: myStream,
+        });
+
+        peer.on("signal", (data) => {
+          socket.emit("answerCall", { signal: data, toUser: fromUser });
+        });
+
+        peer.on("stream", (userStream) => {
+          if (userVideo.current) {
+            userVideo.current.srcObject = userStream;
+          }
+        });
+
+        if (callerSignal) {
+          peer.signal(callerSignal);
+        } else {
+          console.error("Caller signal is not available");
+        }
+
+        connection.current = peer;
+        setStream(myStream);
+        myVideo.current.srcObject = myStream;
+      })
+      .catch((error) => {
+        console.error("Error accessing media devices:", error);
+      });
+
+    setCallAccepted(true);
+  };
+
+  const leaveCall = () => {
+    try {
+      setCallEnded(true);
+      if (connection.current) {
+        connection.current.destroy();
+      }
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+      if (toUser !== null) {
+        setChatUser(toUser);
+      }
+      setToUser(null);
+    } catch (error) {
+      console.error("Error ending the call:", error);
+    }
+  };
 
   return (
     <>
-      <div className="flex flex-row w-full" style={{ height: "100%" }}>
+      <div className="flex flex-row w-full" style={{ height: "100vh" }}>
         <SideBar
           triggerChatUser={triggerChatUser}
           chatUser={chatUser}
@@ -112,15 +240,89 @@ const Home = () => {
             triggerVideoCalling={videoCalling}
           />
         )}
-        {callingScreen && (
-          <CallingScreen
-            videoCall={videoCall}
-            toUser={toUser}
-            callerSignal={callerSignal}
-            setToUser={setToUser}
-            setChatUser={setChatUser}
-          />
+        {true && (
+          <>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                gap: "10px",
+                flexWrap: "wrap",
+                justifyContent: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: window.innerWidth < 400 ? "row" : "column",
+                  gap: "10px",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <video ref={myVideo} autoPlay playsInline width={300}></video>
+                <span
+                  style={{
+                    color: "#4b7d6f",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Your
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: window.innerWidth < 400 ? "row" : "column",
+                  gap: "10px",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <video ref={userVideo} autoPlay playsInline width={300}></video>
+                <span
+                  style={{
+                    color: "#b58776",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Other
+                </span>
+                <button onClick={leaveCall} className="call-btn bg-red-400">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </>
         )}
+        {receivingCall && !callAccepted ? (
+          <div className="w-svw flex items-center flex-col">
+            <div className="flex items-center gap-3 p-4 border-b border-slate-200 h-20">
+              <Avatar
+                imageUrl={fromUser.profilePic}
+                name={fromUser.name}
+                userId={fromUser._id}
+              />
+              <div className="flex-1 text-ellipsis overflow-hidden">
+                <p className="font-semibold text-lg text-gray-300">
+                  {fromUser.name}
+                </p>
+                <p className="text-sm text-gray-500">{fromUser.email}</p>
+              </div>
+              <img src={callImage} alt="ok" style={{ height: "50px" }} />
+            </div>
+            <div className="caller">
+              <button onClick={answerCall} className="call-btn bg-blue-400">
+                Answer
+              </button>
+              <button onClick={leaveCall} className="call-btn bg-red-400">
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* <div className="flex justify-center items-center bg-secondary flex-col gap-2">
