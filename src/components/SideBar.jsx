@@ -25,7 +25,7 @@ const SideBar = ({
   const [editProfile, setEditProfile] = useState(false);
   const [allConversation, setAllConversation] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const REACT_APP_BACKEND_URL = "https://chat-app-server-euua.onrender.com";
+  const REACT_APP_BACKEND_URL = "http://localhost:5000";
 
   useEffect(() => {
     const fetchData = async () => {

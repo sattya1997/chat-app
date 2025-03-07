@@ -14,7 +14,7 @@ const AddUser = ({ setOpenSearchUser }) => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [searchUser, setSearchUser] = useState([]);
-  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
+  const REACT_APP_BACKEND_URL = 'http://localhost:5000';
   const handleUser = async () => {
     try {
       setLoading(true);

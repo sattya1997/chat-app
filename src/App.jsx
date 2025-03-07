@@ -4,6 +4,8 @@ import { Toaster } from "sonner";
 import { SocketProvider } from "./utils/SocketProvider";
 import { useLocalStorage } from "@mantine/hooks";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import process from 'process';
+window.process = process;
 
 const Login = lazy(() => import("./components/Login"));
 const Register = lazy(() => import("./components/Register"));

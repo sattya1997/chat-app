@@ -5,6 +5,7 @@ import Avatar from "./Avatar";
 
 import callImage from "../assets/12320300.gif";
 import { GetSocket } from "../utils/SocketProvider";
+import adapter from "webrtc-adapter";
 
 const CallingScreen = ({
   videoCall,
@@ -30,16 +31,16 @@ const CallingScreen = ({
   useEffect(() => {
     if (socket) {
       navigator.mediaDevices
-        .getUserMedia({ video: videoCall, audio: true })
+        .getUserMedia({ video: true, audio: true })
         .then((stream) => {
-          myVideo.current.srcObject = stream;
           setStream(stream);
+          myVideo.current.srcObject = stream;
         })
         .catch((error) => {
           console.error("Error accessing media devices:", error);
         });
     }
-  }, [socket, videoCall]);
+  }, []);
 
   useEffect(() => {
     if (toUser && callerSignal === null && stream) {
@@ -69,6 +70,9 @@ const CallingScreen = ({
       setCallAccepted(true);
       peer.signal(signal);
     });
+    peer.on("connectionstatechange", () => {
+      console.log("Connection state change:", peer.connectionState);
+    });
 
     connection.current = peer;
     setCalling(true);
@@ -82,6 +86,7 @@ const CallingScreen = ({
         stream: stream,
       });
       peer.on("signal", (data) => {
+        console.log(toUser.name);
         socket.emit("answerCall", { signal: data, toUser: toUser });
       });
       peer.on("stream", (stream) => {
@@ -98,28 +103,6 @@ const CallingScreen = ({
   const answerCall = () => {
     setCallAccepted(true);
     setCallingCard(false);
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream: stream,
-    });
-
-    peer.on("signal", (data) => {
-      socket.emit("answerCall", { signal: data, toUser: fromUser });
-    });
-
-    peer.on("stream", (userStream) => {
-      if (userVideo.current) {
-        userVideo.current.srcObject = userStream;
-      }
-    });
-
-    if (callerSignal) {
-      peer.signal(callerSignal);
-      connection.current = peer;
-    } else {
-      console.error("Caller signal is not available");
-    }
   };
 
   const leaveCall = () => {
@@ -139,67 +122,78 @@ const CallingScreen = ({
   };
 
   useEffect(() => {
-    if (callerSignal !== null && toUser !== null) {
+    if (callerSignal !== null && toUser !== null && stream !== null) {
+      setChatUser(null);
       setCallingCard(true);
     }
-  }, [callerSignal, toUser]);
+  }, [callerSignal, toUser, stream]);
 
   return (
     <>
       {!callEnded && (
-        <div className="w-screen p-5">
+        <div className="w-screen">
           <div
             style={{
               display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
               gap: "10px",
               justifyContent: "center",
               alignItems: "center",
               width: "100%",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-                height: "100%",
-              }}
-            >
-              <span>Calling to {toUser.name}</span>
-              <video ref={myVideo} autoPlay playsInline width={300}></video>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <video ref={userVideo} autoPlay playsInline width={300}></video>
-              <button onClick={leaveCall} className="call-btn bg-red-400">
-                Cancel
-              </button>
+            <div style={{ display: showCallingCard ? "none" : "block"}}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                <span>Calling to {toUser.name}</span>
+                <video ref={myVideo} autoPlay playsInline width={300}></video>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginTop : window.innerWidth < 500 ? "10px": "0"
+                }}
+              >
+                <video ref={userVideo} autoPlay playsInline width={300}></video>
+              </div>
+
+              <div className="flex justify-center p-5">
+                <button
+                  onClick={leaveCall}
+                  className="call-btn bg-red-400 mt-5"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-
           {showCallingCard && (
-            <div className="w-svw flex items-center flex-col">
+            <div className="w-full flex items-center flex-col">
               <div className="flex items-center gap-3 p-4 border-b border-slate-200 h-20">
                 <Avatar
-                  imageUrl={fromUser.profilePic}
-                  name={fromUser.name}
-                  userId={fromUser._id}
+                  imageUrl={toUser.profilePic}
+                  name={toUser.name}
+                  userId={toUser._id}
                 />
                 <div className="flex-1 text-ellipsis overflow-hidden">
                   <p className="font-semibold text-lg text-gray-300">
-                    {fromUser.name}
+                    {toUser.name}
                   </p>
-                  <p className="text-sm text-gray-500">{fromUser.email}</p>
+                  <p className="text-sm text-gray-500">{toUser.email}</p>
                 </div>
                 <img src={callImage} alt="ok" style={{ height: "50px" }} />
               </div>

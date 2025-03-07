@@ -82,6 +82,9 @@ function App() {
     peer.on("stream", (stream) => {
       userVideo.current.srcObject = stream;
     });
+    peer.on('connectionstatechange', () => {
+        console.log('Connection state change:', peer.connectionState);
+      });
 
     peer.signal(callerSignal);
     connectionRef.current = peer;

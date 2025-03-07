@@ -17,7 +17,7 @@ const Register = () => {
     profilePic: "",
   });
   const [uploadImg, setUploadImg] = useState("");
-  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
+  const REACT_APP_BACKEND_URL = 'http://localhost:5000';
 
   const handleChange = (event) => {
     const { name, value } = event.target;

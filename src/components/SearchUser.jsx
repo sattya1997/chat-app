@@ -14,7 +14,7 @@ const SearchUser = ({ allUsers, setChatUser }) => {
   const [search, setSearch] = useState("");
   const [searchUser, setSearchUser] = useState([]);
   const [searchList, setSearchList] = useState([]);
-  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
+  const REACT_APP_BACKEND_URL = 'http://localhost:5000';
 
   const handleUser = async () => {
     try {
@@ -42,7 +42,9 @@ const SearchUser = ({ allUsers, setChatUser }) => {
   };
 
   const closeResultList = () => {
-    setSearchList([]);
+    setTimeout(() => {
+      setSearchList([]);
+    }, 400);
   };
 
   const showAllUserList = () => {
@@ -50,8 +52,8 @@ const SearchUser = ({ allUsers, setChatUser }) => {
   };
 
   const triggerUserSet = (user) => {
-    closeResultList();
     setChatUser(user);
+    closeResultList();
   }
 
   return (
