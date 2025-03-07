@@ -14,7 +14,7 @@ const SearchUser = ({ allUsers, setChatUser }) => {
   const [search, setSearch] = useState("");
   const [searchUser, setSearchUser] = useState([]);
   const [searchList, setSearchList] = useState([]);
-  const REACT_APP_BACKEND_URL = 'http://localhost:5000';
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
 
   const handleUser = async () => {
     try {

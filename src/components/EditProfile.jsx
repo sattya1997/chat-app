@@ -12,7 +12,7 @@ const EditProfile = ({ setEditProfile, user, setUser }) => {
     profilePic: user?.profilePic,
   });
   const uploadRef = useRef();
-  const REACT_APP_BACKEND_URL = 'http://localhost:5000';
+  const REACT_APP_BACKEND_URL = 'https://chat-app-server-euua.onrender.com';
   useEffect(() => {
     setEditProfile({
       name: user?.name,
